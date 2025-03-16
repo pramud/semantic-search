@@ -3,3 +3,5 @@ tiktoken==0.7.0
 sentence-transformers==3.4.1
 lancedb
 pandas
+scikit-learn
+numpy

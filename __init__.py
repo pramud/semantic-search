@@ -3,6 +3,7 @@ from .vector_store import VectorStore
 from .chunker import BaseChunker, CppChunker
 from .indexer import Indexer
 from .searcher import Searcher
+from .clustering import Clusterer
 
 class ChunkerRegistry:
     def __init__(self):

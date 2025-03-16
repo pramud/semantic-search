@@ -33,6 +33,28 @@ class VectorStore:
             logging.error(f"Search failed: {e}")
             return []
 
+    def get_all_data(self):
+        """Retrieve all vector embeddings and metadata from the vector store.
+        
+        Returns:
+            list: A list of dictionaries containing 'vector' and 'metadata' fields
+        """
+        try:
+            logging.info("Retrieving all data from vector store")
+            df = self.table.to_pandas()
+            logging.info(f"Retrieved {len(df)} records from vector store")
+            
+            result = []
+            for _, row in df.iterrows():
+                result.append({
+                    'vector': row['vector'],
+                    'metadata': row['metadata']
+                })
+            return result
+        except Exception as e:
+            logging.error(f"Failed to retrieve all data: {e}")
+            return []
+
 # Example usage
 if __name__ == "__main__":
     # Initialize VectorStore with a sample dimension
