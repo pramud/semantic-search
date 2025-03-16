@@ -91,61 +91,60 @@ def interactive_search(searcher, top_k=5):
             print(f"An error occurred: {e}")
 
 def main():
-    """Main CLI entry point."""
-    parser = argparse.ArgumentParser(
-        description="Semantic code search tool",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=textwrap.dedent("""
-            Examples:
-              # Search for 'file handling' in the default vector database
-              semantic-search "file handling"
-              
-              # Cluster files with similar functionality
-              semantic-search --cluster
-        """)
+    parser = argparse.ArgumentParser(description="Semantic Code Search CLI")
+    parser.add_argument(
+        "--db-path", 
+        type=str, 
+        default="./vector_store.db",
+        help="Path to the vector database"
     )
-    
-    parser.add_argument("query", nargs="?", default="", help="Search query (optional for clustering)")
-    parser.add_argument("--db", default="./codebase_vectors", help="Vector database path")
-    parser.add_argument("--model", default="all-MiniLM-L6-v2", help="Sentence transformer model name")
-    parser.add_argument("--top-k", type=int, default=5, help="Number of results to return")
-    parser.add_argument("--cluster", action="store_true", help="Display clusters of similar files")
-    parser.add_argument("--n-clusters", type=int, default=5, help="Number of clusters to create")
+    parser.add_argument(
+        "--model", 
+        type=str, 
+        default="Qodo/Qodo-Embed-1-1.5B",
+        help="Name of the embedding model to use"
+    )
+    parser.add_argument(
+        "--top-k", 
+        type=int, 
+        default=5,
+        help="Number of results to return for each search"
+    )
+    parser.add_argument(
+        "--debug", 
+        action="store_true",
+        help="Enable debug logging"
+    )
+    parser.add_argument(
+        "--clusters",
+        action="store_true",
+        help="Show file clusters based on semantic similarity"
+    )
+    parser.add_argument(
+        "--num-clusters",
+        type=int,
+        default=5,
+        help="Number of clusters to create when using --clusters (default: 5)"
+    )
     
     args = parser.parse_args()
     
-    # Set up components
-    embedder = setup_embedder(args.model)
-    dimension = embedder.get_dimension()
-    vector_store = setup_vector_store(args.db, dimension)
+    if args.debug:
+        logging.getLogger().setLevel(logging.DEBUG)
     
-    if args.cluster:
-        # Run clustering functionality
-        logger.info(f"Running clustering with {args.n_clusters} clusters")
-        clusterer = Clusterer(vector_store, args.n_clusters)
+    # Setup components
+    embedder = setup_embedder(args.model)
+    vector_store = setup_vector_store(args.db_path, embedder.get_dimension())
+    
+    # If clustering is requested, show clusters and exit
+    if args.clusters:
+        clusterer = Clusterer(vector_store, n_clusters=args.num_clusters)
         clusterer.print_clusters()
-    elif args.query:
-        # Run search functionality
-        searcher = Searcher(embedder, vector_store)
-        results = searcher.search(args.query, args.top_k)
-        
-        if not results:
-            print("No results found.")
-            return
-            
-        print(f"\nSearch results for: '{args.query}'\n")
-        for i, result in enumerate(results):
-            formatted = format_result(result)
-            print(f"Result {i+1}:")
-            print(f"  File: {formatted['file']}")
-            print(f"  Lines: {formatted['lines']}")
-            print(f"  Function: {formatted['function']}")
-            print("  Snippet:")
-            for line in formatted['text'].split('\n'):
-                print(f"    {line}")
-            print()
-    else:
-        parser.print_help()
+        return
+    
+    # Otherwise continue with interactive search as before
+    searcher = Searcher(embedder, vector_store)
+    interactive_search(searcher, args.top_k)
 
 if __name__ == "__main__":
     main() 
