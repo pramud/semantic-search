@@ -2,3 +2,4 @@ tree-sitter==0.20.4
 tiktoken==0.7.0
 sentence-transformers==3.4.1
 lancedb
+pandas
